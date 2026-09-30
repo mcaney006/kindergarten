@@ -1,0 +1,35 @@
+cabal-version:   3.0
+name:            calculator
+version:         0.1.0.0
+synopsis:        A command-line calculator
+description:
+  Calculator is a command-line application for performing basic arithmetic.
+
+license:         BSD-2-Clause
+license-file:    LICENSE
+author:          Michael Caney Jr
+maintainer:      michael.jr@gohighway.com
+copyright:       2026 Michael Caney Jr
+category:        Math
+build-type:      Simple
+tested-with:     GHC ==9.14.1
+extra-doc-files:
+  CHANGELOG.md
+  README.md
+
+source-repository head
+  type:     git
+  location: https://github.com/mcaney006/kindergarten
+
+common discipline
+  default-language: GHC2024
+  ghc-options:
+    -Wall -Wcompat -Widentities -Wincomplete-record-updates
+    -Wincomplete-uni-patterns -Wmissing-export-lists
+    -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+    -Wmissing-deriving-strategies -Wunused-packages
+
+library
+  import:          discipline
+  hs-source-dirs:  src
+  build-depends:   base ^>=4.22
