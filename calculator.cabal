@@ -35,6 +35,7 @@ library
   exposed-modules:
     Calculator.Algebra
     Calculator.Application
+    Calculator.CommandLine
     Calculator.Diagnostic
     Calculator.Expression
     Calculator.Interpreter
@@ -42,11 +43,23 @@ library
     Calculator.Parser
     Calculator.Printer
     Calculator.Render
+    Calculator.Repl
     Calculator.Syntax
     Calculator.Validation
 
   build-depends:
     , base                  ^>=4.22
+    , bytestring            ^>=0.12
+    , containers            ^>=0.8
     , deepseq               ^>=1.5
     , megaparsec            ^>=9.8
+    , optparse-applicative  ^>=0.19
     , text                  ^>=2.1
+
+executable calculator
+  import:         discipline
+  hs-source-dirs: app
+  main-is:        Main.hs
+  build-depends:
+    , base
+    , calculator
