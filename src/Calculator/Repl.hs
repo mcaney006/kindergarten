@@ -62,6 +62,7 @@ parseCommand line = case Text.uncons (Text.stripStart line) of
 
 directiveCommand :: (Text, Text) -> Command
 directiveCommand (name, argument)
+  | Text.null name = Blank
   | name `elem` ["quit", "q"] = Quit
   | name `elem` ["help", "h", "?"] = ShowHelp
   | name `elem` ["type", "t"] = TypeOf (SourceText argument)

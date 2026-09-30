@@ -65,6 +65,7 @@ commands :: [(Text, Command)]
 commands =
   [ ("2 + 2", Evaluate (SourceText "2 + 2"))
   , ("  ", Blank)
+  , (":", Blank)
   , (":q", Quit)
   , (":quit", Quit)
   , (":help", ShowHelp)

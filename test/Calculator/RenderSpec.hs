@@ -5,8 +5,7 @@ module Calculator.RenderSpec
   )
 where
 
-import Calculator.Application (valueOf)
-import Calculator.Interpreter (MagnitudeBound (..))
+import Calculator.Application (CalculatorError, Configuration (..), defaultConfiguration, valueOf)
 import Calculator.Render (Notation (..), Precision (..), RenderedResult (..), render)
 import Calculator.Syntax (SourceText (..))
 import Data.Foldable (for_)
@@ -60,5 +59,5 @@ rendered :: Notation -> Natural -> Rational -> Text
 rendered notation places value =
   let RenderedResult text = render notation (Precision places) value in text
 
-parsedBack :: Text -> Either String Rational
-parsedBack = either (Left . show) Right . valueOf (MagnitudeBound 100_000) . SourceText
+parsedBack :: Text -> Either CalculatorError Rational
+parsedBack = valueOf (magnitudeBound defaultConfiguration) . SourceText

@@ -206,7 +206,7 @@ error: division by zero
 | `:help`, `:h`, `:?` | List the commands |
 | `:quit`, `:q` | End the session; end of input does the same |
 
-When standard input is not a terminal, the prompt is omitted and each line is evaluated in turn:
+When standard input is not a terminal, the prompt is omitted and each line is evaluated in turn. An error is printed in place of that line's result, evaluation continues with the next line, and the exit status is 0:
 
 ```
 $ printf '1 + 1\n2 * 3\n' | calculator
@@ -220,7 +220,7 @@ $ printf '1 + 1\n2 * 3\n' | calculator
 cabal test
 ```
 
-The suite has 193 examples. The properties generate syntax trees, not strings:
+The suite has 204 examples. The properties generate syntax trees, not strings:
 
 - The semiring laws for ℕ, ℤ and ℚ, the ring laws for ℤ and ℚ, and the field laws for ℚ.
 - Each embedding preserves addition, multiplication, zero and one, and ℕ → ℚ equals ℤ → ℚ after ℕ → ℤ.

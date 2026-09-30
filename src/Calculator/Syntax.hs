@@ -71,7 +71,7 @@ lowestPrecedence :: Precedence
 lowestPrecedence = Precedence 0
 
 negationPrecedence :: Precedence
-negationPrecedence = Precedence 3
+negationPrecedence = Precedence 4
 
 data Fixity = Fixity !Associativity !Precedence
   deriving stock (Eq, Show)

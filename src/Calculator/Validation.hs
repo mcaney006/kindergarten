@@ -45,7 +45,7 @@ combine operator rightSyntax left right = case operator of
 
 exponentiate :: Syntax -> Program -> Program -> Either ValidationError Program
 exponentiate exponentSyntax base@(Program sort b) = \case
-  Program SN n -> Right (withSemiring sort (Program sort (NaturalPower b n)))
+  Program SN n -> Right (withCarrier sort (Program sort (NaturalPower b n)))
   Program SZ n -> Right (Program SQ (IntegerPower (rational base) n))
   Program SQ _ -> Left (NonIntegralExponent exponentSyntax)
 
@@ -65,7 +65,7 @@ unify (Program SQ x) (Program SQ y) = Unified SQ x y
 
 semiringOperation ::
   (forall s. (Semiring (Carrier s)) => Expr s -> Expr s -> Expr s) -> Unified -> Program
-semiringOperation operation (Unified sort x y) = withSemiring sort (Program sort (operation x y))
+semiringOperation operation (Unified sort x y) = withCarrier sort (Program sort (operation x y))
 
 ringOperation :: (forall s. (Ring (Carrier s)) => Expr s -> Expr s -> Expr s) -> Unified -> Program
 ringOperation operation = \case
@@ -79,8 +79,8 @@ rational = \case
   Program SZ e -> Embed IntegerInRational e
   Program SQ e -> e
 
-withSemiring :: SSort s -> ((Semiring (Carrier s), Height (Carrier s)) => r) -> r
-withSemiring sort evidence = case sort of
+withCarrier :: SSort s -> ((Semiring (Carrier s), Height (Carrier s)) => r) -> r
+withCarrier sort evidence = case sort of
   SN -> evidence
   SZ -> evidence
   SQ -> evidence

@@ -71,15 +71,31 @@ spec = do
       it ("rejects " <> show input <> " at offset " <> show offset) $
         offsetOf input `shouldBe` Just offset
   describe "printSyntax" $ do
-    it "prints only the parentheses the grammar needs" $
-      fmap printSyntax (parsed "(2 ^ 3) ^ 2 - (1 - 2) - (-3) * 4")
-        `shouldBe` Right "(2 ^ 3) ^ 2 - (1 - 2) - (-3) * 4"
+    for_ minimal $ \text ->
+      it ("prints " <> show text <> " with the parentheses it needs and no others") $
+        fmap printSyntax (parsed text) `shouldBe` Right text
+    for_ [("(2 ^ (-1))", "2 ^ -1"), ("((1 * 2)) + (3)", "1 * 2 + 3"), ("-(2 ^ 2)", "-2 ^ 2")] $
+      \(text, canonical) ->
+        it ("drops the redundant parentheses in " <> show text) $
+          fmap (printSyntax . stripGroups) (parsed text) `shouldBe` Right canonical
     prop "reparses printed trees to the same tree" $
       forAll syntax $ \tree ->
         fmap stripGroups (parsed (printSyntax (stripGroups tree))) === Right (stripGroups tree)
     prop "printed text is a fixed point of parsing and printing" $
       forAll syntax $ \tree ->
         fmap printSyntax (parsed (printSyntax tree)) === Right (printSyntax tree)
+
+minimal :: [Text]
+minimal =
+  [ "(2 ^ 3) ^ 2 - (1 - 2) - (-3) * 4"
+  , "2 ^ -1"
+  , "2 ^ -1 ^ 2"
+  , "(-2) ^ 2"
+  , "-(2 * 3)"
+  , "3 * -2"
+  , "1 - -2"
+  , "--2"
+  ]
 
 rejections :: [(Text, Int)]
 rejections =

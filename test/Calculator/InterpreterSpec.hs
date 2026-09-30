@@ -5,7 +5,12 @@ module Calculator.InterpreterSpec
   )
 where
 
-import Calculator.Application (CalculatorError (..), valueOf)
+import Calculator.Application
+  ( CalculatorError (..)
+  , Configuration (..)
+  , defaultConfiguration
+  , valueOf
+  )
 import Calculator.Generators (regroup, stripGroups, syntax)
 import Calculator.Interpreter (EvaluationError (..), MagnitudeBound (..), evaluate)
 import Calculator.Oracle (reference)
@@ -15,6 +20,7 @@ import Calculator.Validation (ValidationError (..), validate)
 import Data.Bifunctor (first)
 import Data.Foldable (for_)
 import Data.Text (Text)
+import Numeric.Natural (Natural)
 import Test.Hspec (Spec, describe, it, shouldBe)
 import Test.Hspec.QuickCheck (modifyMaxSuccess, prop)
 import Test.QuickCheck (Property, classify, discard, forAll, property, (===))
@@ -31,7 +37,7 @@ spec = do
         value input `shouldBe` Left (EvaluationFailure DivisionByZero)
   describe "magnitude bound" $ do
     it "admits a power whose height meets the bound" $
-      value "2 ^ 100000" `shouldBe` Right (2 ^ (100_000 :: Integer))
+      value "2 ^ 100000" `shouldBe` Right (2 ^ limit)
     for_ ["2 ^ 100001", "(1 / 2) ^ 100001", "2 ^ -100001", "(2 ^ 1000) ^ 1000"] $ \input ->
       it ("refuses " <> show input) $
         value input `shouldBe` Left (EvaluationFailure (MagnitudeExceeded bound))
@@ -76,7 +82,10 @@ values =
   ]
 
 bound :: MagnitudeBound
-bound = MagnitudeBound 100_000
+bound = magnitudeBound defaultConfiguration
+
+limit :: Natural
+limit = let MagnitudeBound bits = bound in bits
 
 value :: Text -> Either CalculatorError Rational
 value = valueOf bound . SourceText
