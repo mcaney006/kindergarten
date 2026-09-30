@@ -35,5 +35,10 @@ library
   exposed-modules:
     Calculator.Algebra
     Calculator.Number
+    Calculator.Printer
+    Calculator.Syntax
 
-  build-depends:   base ^>=4.22
+  build-depends:
+    , base        ^>=4.22
+    , deepseq     ^>=1.5
+    , text        ^>=2.1
