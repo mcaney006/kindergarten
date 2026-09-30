@@ -32,4 +32,8 @@ common discipline
 library
   import:          discipline
   hs-source-dirs:  src
+  exposed-modules:
+    Calculator.Algebra
+    Calculator.Number
+
   build-depends:   base ^>=4.22
