@@ -1,0 +1,235 @@
+name: Haskell CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: haskell-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.os }} / GHC ${{ matrix.ghc }}
+
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        include:
+          - os: ubuntu-latest
+            ghc: "8.10.3"
+
+          - os: ubuntu-latest
+            ghc: "8.10.7"
+
+          - os: ubuntu-latest
+            ghc: "9.2.8"
+
+          - os: ubuntu-latest
+            ghc: "9.6.7"
+
+          - os: ubuntu-latest
+            ghc: "9.10.3"
+
+          - os: ubuntu-latest
+            ghc: "9.12.4"
+
+          - os: ubuntu-latest
+            ghc: "9.14.1"
+
+          - os: macos-latest
+            ghc: "9.14.1"
+
+          - os: windows-latest
+            ghc: "9.14.1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Haskell
+        id: haskell
+        uses: haskell-actions/setup@v2.7.6
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: "3.18.1.0"
+          cabal-update: true
+
+      - name: Toolchain
+        run: |
+          ghc --version
+          cabal --version
+
+      - name: Cache Cabal
+        uses: actions/cache@v6
+        with:
+          path: |
+            ${{ steps.haskell.outputs.cabal-store }}
+            dist-newstyle
+          key: >-
+            haskell-${{ runner.os }}-${{ runner.arch }}-
+            ghc-${{ matrix.ghc }}-
+            cabal-3.18.1.0-
+            ${{ hashFiles('**/*.cabal', 'cabal.project', 'cabal.project.freeze') }}
+          restore-keys: |
+            haskell-${{ runner.os }}-${{ runner.arch }}-ghc-${{ matrix.ghc }}-
+            haskell-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Resolve dependencies
+        run: |
+          cabal build all \
+            --dry-run \
+            --enable-tests \
+            --enable-benchmarks
+
+      - name: Build
+        run: |
+          cabal build all \
+            --enable-tests \
+            --enable-benchmarks \
+            --write-ghc-environment-files=never
+
+      - name: Test
+        run: |
+          cabal test all \
+            --test-show-details=direct
+
+  quality:
+    name: Compiler Tribunal
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Setup Haskell
+        id: haskell
+        uses: haskell-actions/setup@v2.7.6
+        with:
+          ghc-version: "9.14.1"
+          cabal-version: "3.18.1.0"
+          cabal-update: true
+
+      - name: Cache Cabal
+        uses: actions/cache@v6
+        with:
+          path: |
+            ${{ steps.haskell.outputs.cabal-store }}
+            dist-newstyle
+          key: >-
+            quality-${{ runner.os }}-${{ runner.arch }}-
+            ghc-9.14.1-
+            cabal-3.18.1.0-
+            ${{ hashFiles('**/*.cabal', 'cabal.project', 'cabal.project.freeze') }}
+          restore-keys: |
+            quality-${{ runner.os }}-${{ runner.arch }}-ghc-9.14.1-
+            quality-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Validate package metadata
+        run: cabal check
+
+      - name: Strict build
+        run: |
+          cabal build all \
+            --enable-tests \
+            --enable-benchmarks \
+            --write-ghc-environment-files=never \
+            --ghc-options="-Wall -Wcompat -Werror"
+
+      - name: Test
+        run: |
+          cabal test all \
+            --test-show-details=direct
+
+      - name: Build documentation
+        run: |
+          cabal haddock all \
+            --haddock-all \
+            --haddock-hyperlink-source \
+            --haddock-quickjump
+
+      - name: Build source distribution
+        run: |
+          mkdir -p artifacts/sdist
+          cabal sdist all \
+            --output-directory=artifacts/sdist
+
+      - name: Clean-room source distribution verification
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          shopt -s nullglob
+
+          tarballs=(artifacts/sdist/*.tar.gz)
+
+          if (( ${#tarballs[@]} == 0 )); then
+            echo "No source distributions were produced."
+            exit 1
+          fi
+
+          for tarball in "${tarballs[@]}"; do
+            root="$(mktemp -d)"
+
+            tar \
+              --extract \
+              --gzip \
+              --file="$tarball" \
+              --directory="$root"
+
+            package_dir="$(
+              find "$root" \
+                -mindepth 1 \
+                -maxdepth 1 \
+                -type d \
+                -print \
+                -quit
+            )"
+
+            if [[ -z "$package_dir" ]]; then
+              echo "Unable to locate extracted package for $tarball."
+              exit 1
+            fi
+
+            (
+              cd "$package_dir"
+
+              cabal build all \
+                --enable-tests \
+                --write-ghc-environment-files=never
+
+              cabal test all \
+                --test-show-details=direct
+            )
+
+            rm -rf "$root"
+          done
+
+      - name: Upload source distribution
+        uses: actions/upload-artifact@v7
+        with:
+          name: kindergarten-sdist
+          path: artifacts/sdist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 14
