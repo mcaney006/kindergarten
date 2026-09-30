@@ -34,16 +34,19 @@ library
   hs-source-dirs:  src
   exposed-modules:
     Calculator.Algebra
+    Calculator.Application
+    Calculator.Diagnostic
     Calculator.Expression
     Calculator.Interpreter
     Calculator.Number
     Calculator.Parser
     Calculator.Printer
+    Calculator.Render
     Calculator.Syntax
     Calculator.Validation
 
   build-depends:
-    , base        ^>=4.22
-    , deepseq     ^>=1.5
-    , megaparsec  ^>=9.8
-    , text        ^>=2.1
+    , base                  ^>=4.22
+    , deepseq               ^>=1.5
+    , megaparsec            ^>=9.8
+    , text                  ^>=2.1
