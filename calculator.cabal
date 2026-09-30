@@ -34,10 +34,12 @@ library
   hs-source-dirs:  src
   exposed-modules:
     Calculator.Algebra
+    Calculator.Expression
     Calculator.Number
     Calculator.Parser
     Calculator.Printer
     Calculator.Syntax
+    Calculator.Validation
 
   build-depends:
     , base        ^>=4.22
