@@ -1,0 +1,102 @@
+cabal-version:   3.0
+name:            calculator
+version:         0.1.0.0
+synopsis:        A command-line calculator
+description:
+  Calculator is a command-line application for performing basic arithmetic.
+
+license:         BSD-2-Clause
+license-file:    LICENSE
+author:          Michael Caney Jr
+maintainer:      michael.jr@gohighway.com
+copyright:       2026 Michael Caney Jr
+category:        Math
+build-type:      Simple
+tested-with:     GHC ==9.14.1
+extra-doc-files:
+  CHANGELOG.md
+  README.md
+
+source-repository head
+  type:     git
+  location: https://github.com/mcaney006/kindergarten
+
+common discipline
+  default-language: GHC2024
+  ghc-options:
+    -Wall -Wcompat -Widentities -Wincomplete-record-updates
+    -Wincomplete-uni-patterns -Wmissing-export-lists
+    -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+    -Wmissing-deriving-strategies -Wunused-packages
+
+library
+  import:          discipline
+  hs-source-dirs:  src
+  exposed-modules:
+    Calculator.Algebra
+    Calculator.Application
+    Calculator.CommandLine
+    Calculator.Diagnostic
+    Calculator.Expression
+    Calculator.Interpreter
+    Calculator.Number
+    Calculator.Parser
+    Calculator.Printer
+    Calculator.Render
+    Calculator.Repl
+    Calculator.Syntax
+    Calculator.Validation
+
+  build-depends:
+    , base                  ^>=4.22
+    , bytestring            ^>=0.12
+    , containers            ^>=0.8
+    , deepseq               ^>=1.5
+    , megaparsec            ^>=9.8
+    , optparse-applicative  ^>=0.19
+    , text                  ^>=2.1
+
+executable calculator
+  import:         discipline
+  hs-source-dirs: app
+  main-is:        Main.hs
+  build-depends:
+    , base
+    , calculator
+
+test-suite spec
+  import:         discipline
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Main.hs
+  other-modules:
+    Calculator.AlgebraSpec
+    Calculator.ApplicationSpec
+    Calculator.Generators
+    Calculator.InterpreterSpec
+    Calculator.NumberSpec
+    Calculator.Oracle
+    Calculator.ParserSpec
+    Calculator.RenderSpec
+    Calculator.ReplSpec
+    Calculator.ValidationSpec
+
+  build-depends:
+    , base
+    , calculator
+    , hspec         ^>=2.11
+    , megaparsec
+    , QuickCheck    >=2.15 && <2.19
+    , text
+    , transformers  ^>=0.6
+
+benchmark bench
+  import:         discipline
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: bench
+  main-is:        Main.hs
+  build-depends:
+    , base
+    , calculator
+    , criterion   ^>=1.6
+    , text

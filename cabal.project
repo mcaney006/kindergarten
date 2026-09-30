@@ -1,0 +1,6 @@
+packages: .
+tests: True
+benchmarks: True
+
+package calculator
+  ghc-options: -Werror
