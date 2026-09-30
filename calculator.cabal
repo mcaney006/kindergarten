@@ -35,10 +35,12 @@ library
   exposed-modules:
     Calculator.Algebra
     Calculator.Number
+    Calculator.Parser
     Calculator.Printer
     Calculator.Syntax
 
   build-depends:
     , base        ^>=4.22
     , deepseq     ^>=1.5
+    , megaparsec  ^>=9.8
     , text        ^>=2.1
