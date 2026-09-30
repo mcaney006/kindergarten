@@ -63,3 +63,29 @@ executable calculator
   build-depends:
     , base
     , calculator
+
+test-suite spec
+  import:         discipline
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Main.hs
+  other-modules:
+    Calculator.AlgebraSpec
+    Calculator.ApplicationSpec
+    Calculator.Generators
+    Calculator.InterpreterSpec
+    Calculator.NumberSpec
+    Calculator.Oracle
+    Calculator.ParserSpec
+    Calculator.RenderSpec
+    Calculator.ReplSpec
+    Calculator.ValidationSpec
+
+  build-depends:
+    , base
+    , calculator
+    , hspec         ^>=2.11
+    , megaparsec
+    , QuickCheck    >=2.15 && <2.19
+    , text
+    , transformers  ^>=0.6
