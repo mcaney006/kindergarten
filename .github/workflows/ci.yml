@@ -1,0 +1,90 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: setup
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: '9.14.1'
+          cabal-version: latest
+          cabal-update: true
+
+      - name: Plan the build
+        run: cabal build all --dry-run
+
+      - name: Restore dependencies
+        id: cache
+        uses: actions/cache/restore@v6
+        env:
+          key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ env.key }}-plan-${{ hashFiles('dist-newstyle/cache/plan.json') }}
+          restore-keys: ${{ env.key }}-
+
+      - name: Build dependencies
+        run: cabal build all --only-dependencies
+
+      - name: Save dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+      - name: Build
+        run: cabal build all
+
+      - name: Test
+        run: cabal test all --test-show-details=direct
+
+      - name: Check the executable
+        run: |
+          test "$(cabal run -v0 calculator -- '2 + 3 * 4')" = 14
+          test "$(cabal run -v0 calculator -- '0.1 + 0.2')" = 0.3
+          if cabal run -v0 calculator -- '1 / 0'; then exit 1; fi
+
+      - name: Run benchmarks once
+        run: cabal bench all --benchmark-options='--time-limit 0.5'
+
+  lint:
+    name: hlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: haskell-actions/hlint-setup@v2
+        with:
+          version: '3.10'
+
+      - uses: haskell-actions/hlint-run@v2
+        with:
+          path: '["src/", "app/", "test/", "bench/"]'
+          fail-on: suggestion
+
+  format:
+    name: fourmolu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: haskell-actions/run-fourmolu@v13
+        with:
+          version: '0.20.1.0'
