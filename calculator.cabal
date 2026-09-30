@@ -89,3 +89,14 @@ test-suite spec
     , QuickCheck    >=2.15 && <2.19
     , text
     , transformers  ^>=0.6
+
+benchmark bench
+  import:         discipline
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: bench
+  main-is:        Main.hs
+  build-depends:
+    , base
+    , calculator
+    , criterion   ^>=1.6
+    , text
