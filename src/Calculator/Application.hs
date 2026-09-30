@@ -6,6 +6,7 @@ module Calculator.Application
   , CalculatorError (..)
   , Judgement (..)
   , elaborate
+  , valueOf
   , calculate
   , judge
   )
@@ -53,11 +54,15 @@ elaborate source = do
   program <- first ValidationFailure (validate syntax)
   pure (syntax, program)
 
-calculate :: Configuration -> SourceText -> Either CalculatorError RenderedResult
-calculate configuration source = do
+valueOf :: MagnitudeBound -> SourceText -> Either CalculatorError Rational
+valueOf bound source = do
   (_, program) <- elaborate source
-  value <- first EvaluationFailure (evaluate (magnitudeBound configuration) program)
-  pure (render (notation configuration) (precision configuration) value)
+  first EvaluationFailure (evaluate bound program)
+
+calculate :: Configuration -> SourceText -> Either CalculatorError RenderedResult
+calculate configuration =
+  fmap (render (notation configuration) (precision configuration))
+    . valueOf (magnitudeBound configuration)
 
 judge :: SourceText -> Either CalculatorError Judgement
 judge source = do
